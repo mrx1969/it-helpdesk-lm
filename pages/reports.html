@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Laporan - Helpdesk IT</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-4">
+  <header class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold">Laporan</h2>
+    <div>
+      <button id="back" class="text-sm px-3 py-1 rounded bg-white shadow">Kembali</button>
+    </div>
+  </header>
+  
+  <section class="bg-white p-4 rounded shadow space-y-3">
+    <div class="flex gap-2 flex-wrap">
+      <select id="report-type" class="p-2 border rounded">
+        <option value="monthly">Bulanan</option>
+        <option value="yearly">Tahunan</option>
+      </select>
+      <input id="report-year" type="number" class="p-2 border rounded w-28" value="2025" />
+      <button id="generate" class="px-4 py-2 rounded bg-indigo-600 text-white">Generate</button>
+      <button id="export" class="px-4 py-2 rounded bg-white border">Export CSV</button>
+    </div>
+
+    <div id="report-result" class="text-sm text-slate-600 space-y-2">
+      </div>
+  </section>
+
+  <script src="../scripts/app.js"></script>
+  <script>
+    (function(){
+      if(localStorage.getItem('helpdesk_role')!=='support') window.location.href='../pages/index.html';
+      
+      document.getElementById('generate').addEventListener('click', ()=>{
+        const type = document.getElementById('report-type').value;
+        const year = parseInt(document.getElementById('report-year').value,10);
+        const r = window.Helpdesk.generateReport({type,year});
+        const out = document.getElementById('report-result');
+        out.innerHTML = ''; // Clear
+        
+        if(type==='monthly'){
+          out.innerHTML = Object.keys(r).map(m=>`<div class="p-2 bg-slate-50 rounded"><strong>${m}</strong>: ${r[m].total} tiket (open:${r[m].open}, in_progress:${r[m].in_progress}, closed:${r[m].closed})</div>`).join('');
+        } else {
+          out.innerHTML = `<div class="p-2 bg-slate-50 rounded">Tahun ${year}: total ${r.total} tiket — open:${r.open} — in_progress:${r.in_progress} — closed:${r.closed}</div>`;
+        }
+      });
+      
+      document.getElementById('back').addEventListener('click', ()=>{ window.location.href='support-dashboard.html'; });
+      
+      document.getElementById('export').addEventListener('click', ()=>{
+        const year = parseInt(document.getElementById('report-year').value,10);
+        const csv = window.Helpdesk.exportCSV({year});
+        const blob = new Blob([csv],{type:'text/csv'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download=`report_${year}.csv`; a.click(); URL.revokeObjectURL(url);
+      });
+    })();
+  </script>
+</body>
+</html>

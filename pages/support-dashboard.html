@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Support - Helpdesk IT</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-4">
+  <header class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold">Dashboard IT Support</h2>
+    <div class="flex gap-2">
+      <a href="reports.html" class="text-sm px-3 py-1 rounded bg-white shadow">Laporan</a>
+      <button id="logout" class="text-sm px-3 py-1 rounded bg-white shadow">Logout</button>
+    </div>
+  </header>
+
+  <section class="mb-4">
+    <div class="flex gap-2">
+      <input id="search" placeholder="Cari judul / user" class="flex-1 p-2 rounded border" />
+      <select id="filter-status" class="p-2 border rounded">
+        <option value="all">Semua</option>
+        <option value="open">Open</option>
+        <option value="in_progress">In Progress</option>
+        <option value="closed">Closed</option>
+      </select>
+    </div>
+  </section>
+
+  <section>
+    <div id="tickets-list" class="space-y-3">
+      </div>
+  </section>
+
+  <script src="../scripts/app.js"></script>
+  <script>
+    (function(){
+      if(localStorage.getItem('helpdesk_role')!=='support') window.location.href='../pages/index.html';
+      
+      const listEl = document.getElementById('tickets-list');
+      
+      function render(tickets){
+        listEl.innerHTML='';
+        if(!tickets.length) listEl.innerHTML = '<div class="p-4 bg-white rounded shadow text-sm text-slate-500">Tidak ada tiket.</div>';
+        
+        tickets.forEach(t=>{
+          const el = document.createElement('div');
+          el.className='p-3 bg-white rounded shadow';
+          // Wrapper div agar klik pada tombol 'Ambil' tidak trigger klik ke detail
+          const content = document.createElement('div');
+          content.className='flex justify-between';
+          content.innerHTML = `<div><div class="font-medium">${t.title}</div><div class="text-xs text-slate-400">Owner: ${t.ownerName || 'User'} • ${t.category}</div></div><div class="text-xs text-right"><div>${t.status}</div><div class="mt-2"><button data-id="${t.id}" class="assign btn px-3 py-1 rounded bg-indigo-600 text-white text-xs">Ambil</button></div></div>`;
+          
+          content.querySelector('.assign').addEventListener('click', e=>{
+            e.stopPropagation(); // Hentikan event klik agar tidak pindah halaman
+            const id = e.target.dataset.id;
+            window.Helpdesk.assignTicket(id, {assignee: 'IT Support #1'});
+            // Muat ulang daftar
+            const q=document.getElementById('search').value; 
+            render(window.Helpdesk.searchTickets(q, document.getElementById('filter-status').value));
+          });
+
+          el.appendChild(content);
+          el.addEventListener('click', ()=>{ localStorage.setItem('open_ticket', t.id); window.location.href='../pages/ticket-detail.html'; });
+          listEl.appendChild(el);
+        });
+      }
+      
+      document.getElementById('logout').addEventListener('click', ()=>{ localStorage.removeItem('helpdesk_role'); window.location.href='../pages/index.html'; });
+      document.getElementById('search').addEventListener('input', (e)=>{ const q=e.target.value.trim(); render(window.Helpdesk.searchTickets(q, document.getElementById('filter-status').value)); });
+      document.getElementById('filter-status').addEventListener('change', ()=>{ const q=document.getElementById('search').value; render(window.Helpdesk.searchTickets(q, document.getElementById('filter-status').value)); });
+      
+      render(window.Helpdesk.getTickets());
+    })();
+  </script>
+</body>
+</html>

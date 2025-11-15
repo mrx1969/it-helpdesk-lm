@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Detail Tiket</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-4">
+  <div class="max-w-xl mx-auto">
+    <button id="back" class="mb-3 text-sm text-indigo-600">← Kembali ke Dashboard</button>
+
+    <div id="detail" class="bg-white p-4 rounded shadow">
+      </div>
+
+    <div id="actions" class="mt-4">
+      </div>
+  </div>
+
+  <script src="../scripts/app.js"></script>
+  <script>
+    (function(){
+      const id = localStorage.getItem('open_ticket');
+      if(!id) return window.location.href='index.html';
+      
+      const ticket = window.Helpdesk.getTicketById(id);
+      if(!ticket) {
+          alert('Tiket tidak ditemukan');
+          return window.location.href='index.html';
+      }
+
+      const detail = document.getElementById('detail');
+      detail.innerHTML = `<div class="font-medium text-lg">${ticket.title}</div><div class="text-xs text-slate-500">${ticket.category} • ${new Date(ticket.createdAt).toLocaleString()}</div><p class="mt-3 text-sm">${ticket.description}</p><div class="mt-3 text-xs text-slate-400">Status: ${ticket.status} • Assignee: ${ticket.assignee || '-'} </div>`;
+
+      const actions = document.getElementById('actions');
+      
+      // Jika support, tampilkan update status
+      if(localStorage.getItem('helpdesk_role')==='support'){
+        actions.innerHTML = `<div class="bg-white p-3 rounded shadow space-y-2"><select id="status" class="w-full p-2 border rounded"><option value="open">open</option><option value="in_progress">in_progress</option><option value="closed">closed</option></select><textarea id="comment" rows=3 class="w-full p-2 border rounded" placeholder="Tambahkan komentar"></textarea><div class="flex gap-2 justify-end"><button id="save" class="px-4 py-2 rounded bg-indigo-600 text-white">Simpan</button></div></div>`;
+        document.getElementById('status').value = ticket.status; // Set status saat ini
+        
+        document.getElementById('save').addEventListener('click', ()=>{
+          const status = document.getElementById('status').value;
+          const comment = document.getElementById('comment').value.trim();
+          window.Helpdesk.updateTicket(id,{status});
+          if(comment) window.Helpdesk.addComment(id,{text:comment,author:'IT Support'});
+          alert('Tersimpan');
+          location.reload();
+        });
+      } else {
+        // Jika user, hanya bisa tambah komentar
+        actions.innerHTML = `<div class="bg-white p-3 rounded shadow space-y-2"><textarea id="comment" rows=3 class="w-full p-2 border rounded" placeholder="Tambahkan komentar / bukti"></textarea><div class="flex gap-2 justify-end"><button id="send" class="px-4 py-2 rounded bg-indigo-600 text-white">Kirim</button></div></div>`;
+        document.getElementById('send').addEventListener('click', ()=>{
+          const comment = document.getElementById('comment').value.trim();
+          if(!comment) return alert('Isi komentar');
+          window.Helpdesk.addComment(id,{text:comment,author:'User'});
+          alert('Dikirim');
+          location.reload();
+        });
+      }
+
+      document.getElementById('back').addEventListener('click', ()=>{
+        const role = localStorage.getItem('helpdesk_role');
+        window.location.href = role==='support' ? 'support-dashboard.html' : 'user-dashboard.html';
+      });
+
+      // Render komentar
+      const cArea = document.createElement('div');
+      cArea.className='mt-4';
+      const comments = ticket.comments || [];
+      let commentsHTML = '<h3 class="text-sm font-medium mb-2">Komentar</h3>';
+      
+      if(comments.length){
+          commentsHTML += comments.map(c=>`<div class="p-2 bg-white rounded mb-2 shadow-sm"><div class="text-xs text-slate-500">${c.author} • ${new Date(c.createdAt).toLocaleString()}</div><div class="mt-1 text-sm">${c.text}</div></div>`).join('');
+      } else {
+          commentsHTML += '<div class="p-2 bg-white rounded text-sm text-slate-400">Belum ada komentar.</div>';
+      }
+      cArea.innerHTML = commentsHTML;
+      // Tambahkan komentar setelah bagian detail
+      detail.parentNode.insertBefore(cArea, actions);
+
+    })();
+  </script>
+</body>
+</html>
