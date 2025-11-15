@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Helpdesk IT - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+  <main class="w-full max-w-md bg-white rounded-2xl shadow p-6">
+    <h1 class="text-2xl font-semibold mb-2">Helpdesk IT</h1>
+    <p class="text-sm text-slate-500 mb-6">Pilih peran untuk demo (no password, mock auth)</p>
+
+    <div class="grid gap-3">
+      <button id="as-user" class="w-full py-3 rounded-xl bg-indigo-600 text-white font-medium">Masuk sebagai User</button>
+      <button id="as-support" class="w-full py-3 rounded-xl border border-indigo-600 text-indigo-600 font-medium">Masuk sebagai IT Support</button>
+    </div>
+
+    <p class="text-xs text-slate-400 mt-6">Catatan: data disimpan di localStorage (demo).</p>
+  </main>
+
+  <script>
+    document.getElementById('as-user').addEventListener('click', ()=>{
+      localStorage.setItem('helpdesk_role','user');
+      window.location.href = 'user-dashboard.html';
+    });
+    document.getElementById('as-support').addEventListener('click', ()=>{
+      localStorage.setItem('helpdesk_role','support');
+      window.location.href = 'support-dashboard.html';
+    });
+  </script>
+</body>
+</html>
